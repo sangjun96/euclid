@@ -1,0 +1,105 @@
+name: euclid
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: euclid
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: euclid
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infra/postgres/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U euclid -d euclid"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  phoenix:
+    image: arizephoenix/phoenix:${PHOENIX_VERSION:-version-20.1.0}
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PHOENIX_SQL_DATABASE_URL: postgresql://euclid:${POSTGRES_PASSWORD}@postgres:5432/phoenix
+      PHOENIX_TELEMETRY_ENABLED: "false"
+      PHOENIX_ALLOW_EXTERNAL_RESOURCES: "false"
+      PHOENIX_AGENTS_DISABLE_WEB_ACCESS: "true"
+      PHOENIX_AGENTS_DISABLE_BASH: "true"
+      PHOENIX_ENABLE_AUTH: ${PHOENIX_ENABLE_AUTH:-false}
+      PHOENIX_SECRET: ${PHOENIX_SECRET:-eucliddevelopmentsecret1234567890}
+    ports:
+      - "${PHOENIX_BIND:-127.0.0.1}:${PHOENIX_PORT:-6006}:6006"
+  otel-collector:
+    image: otel/opentelemetry-collector:0.130.0
+    restart: unless-stopped
+    volumes:
+      - ./infra/otel/collector.yaml:/etc/otelcol/config.yaml:ro
+  migrate:
+    build:
+      context: .
+      target: ${BUILD_TARGET:-development}
+    command: ["bun", "run", "db:migrate"]
+    environment:
+      DATABASE_URL: postgresql://euclid:${POSTGRES_PASSWORD}@postgres:5432/euclid
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+  api:
+    build:
+      context: .
+      target: ${BUILD_TARGET:-development}
+    command: ["bun", "apps/server/src/api/index.ts"]
+    restart: unless-stopped
+    init: true
+    environment:
+      DATABASE_URL: postgresql://euclid:${POSTGRES_PASSWORD}@postgres:5432/euclid
+      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: http://phoenix:6006/v1/traces
+      PHOENIX_API_KEY: ${PHOENIX_API_KEY:-}
+      OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: ${OTEL_EXPORTER_OTLP_LOGS_ENDPOINT:-http://otel-collector:4318/v1/logs}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      otel-collector:
+        condition: service_started
+  worker:
+    build:
+      context: .
+      target: ${BUILD_TARGET:-development}
+    command: ["bun", "apps/server/src/worker/index.ts"]
+    restart: unless-stopped
+    init: true
+    environment:
+      DATABASE_URL: postgresql://euclid:${POSTGRES_PASSWORD}@postgres:5432/euclid
+      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: http://phoenix:6006/v1/traces
+      PHOENIX_API_KEY: ${PHOENIX_API_KEY:-}
+      OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: ${OTEL_EXPORTER_OTLP_LOGS_ENDPOINT:-http://otel-collector:4318/v1/logs}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      otel-collector:
+        condition: service_started
+    stop_grace_period: 30s
+  web:
+    build:
+      context: .
+      target: ${BUILD_TARGET:-development}
+    command: ["bun", "apps/web/server.ts"]
+    restart: unless-stopped
+    init: true
+    environment:
+      API_URL: http://api:3000
+      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: http://phoenix:6006/v1/traces
+      PHOENIX_API_KEY: ${PHOENIX_API_KEY:-}
+      OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: ${OTEL_EXPORTER_OTLP_LOGS_ENDPOINT:-http://otel-collector:4318/v1/logs}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    depends_on:
+      - api
+    ports:
+      - "${WEB_BIND:-127.0.0.1}:${WEB_PORT:-8080}:8080"
+volumes:
+  postgres_data:

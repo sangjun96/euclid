@@ -1,0 +1,9 @@
+{
+  "name": "@euclid/server",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@euclid/contracts": "workspace:*",
+    "@euclid/log": "workspace:*"
+  }
+}

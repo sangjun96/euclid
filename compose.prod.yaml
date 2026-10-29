@@ -1,0 +1,23 @@
+services:
+  migrate:
+    build:
+      target: production
+  api:
+    build:
+      target: production
+    environment:
+      NODE_ENV: production
+  worker:
+    build:
+      target: production
+    environment:
+      NODE_ENV: production
+  web:
+    build:
+      target: production
+    environment:
+      NODE_ENV: production
+  phoenix:
+    environment:
+      PHOENIX_ENABLE_AUTH: "true"
+      PHOENIX_SECRET: ${PHOENIX_SECRET:?Set PHOENIX_SECRET in .env}

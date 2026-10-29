@@ -1,0 +1,25 @@
+services:
+  postgres:
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+  api:
+    command: ["bun", "--watch", "apps/server/src/api/index.ts"]
+    volumes:
+      - ./apps/server/src:/app/apps/server/src:ro
+      - ./packages/contracts/src:/app/packages/contracts/src:ro
+      - ./packages/log/src:/app/packages/log/src:ro
+  worker:
+    command: ["bun", "--watch", "apps/server/src/worker/index.ts"]
+    volumes:
+      - ./apps/server/src:/app/apps/server/src:ro
+      - ./packages/contracts/src:/app/packages/contracts/src:ro
+      - ./packages/log/src:/app/packages/log/src:ro
+  web:
+    command: ["bun", "--watch", "apps/web/server.ts"]
+    volumes:
+      - ./apps/web/src:/app/apps/web/src:ro
+      - ./apps/web/index.html:/app/apps/web/index.html:ro
+      - ./apps/web/server.ts:/app/apps/web/server.ts:ro
+      - ./apps/web/vite.config.ts:/app/apps/web/vite.config.ts:ro
+      - ./packages/contracts/src:/app/packages/contracts/src:ro
+      - ./packages/log/src:/app/packages/log/src:ro

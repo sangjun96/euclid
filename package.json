@@ -1,0 +1,43 @@
+{
+  "name": "euclid",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "docker compose -f compose.yaml -f compose.dev.yaml up --build",
+    "dev:down": "docker compose -f compose.yaml -f compose.dev.yaml down",
+    "check": "biome check . --fix",
+    "typecheck": "tsc --noEmit",
+    "build:web": "vite build --config apps/web/vite.config.ts",
+    "db:generate": "drizzle-kit generate --config apps/server/drizzle.config.ts",
+    "db:migrate": "bun apps/server/src/db/migrate.ts"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.19.17",
+    "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/api-logs": "0.203.0",
+    "@opentelemetry/exporter-logs-otlp-proto": "0.203.0",
+    "@opentelemetry/exporter-trace-otlp-proto": "0.203.0",
+    "@opentelemetry/sdk-logs": "0.203.0",
+    "@opentelemetry/sdk-node": "^0.203.0",
+    "drizzle-orm": "^0.44.0",
+    "hono": "^4.13.13",
+    "pg": "^8.16.0",
+    "pg-boss": "^12.0.0",
+    "pino": "^10.4.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.6.4",
+    "@types/node": "^22.20.3",
+    "@types/pg": "^8.15.0",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "drizzle-kit": "^0.31.0",
+    "typescript": "^5.8.0",
+    "vite": "^7.3.7"
+  }
+}
