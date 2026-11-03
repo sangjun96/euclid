@@ -1,0 +1,23 @@
+{
+  "name": "euclid-workspace",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Full-stack monorepo with Hono, React (Vite), Postgres, Langfuse, OpenAI, pg-boss, and Kysely",
+  "scripts": {
+    "dev": "pnpm --filter \"@euclid/*\" --parallel dev",
+    "dev:infra": "docker compose -f docker/docker-compose.infra.yml up -d",
+    "dev:infra:down": "docker compose -f docker/docker-compose.infra.yml down",
+    "dev:infra:logs": "docker compose -f docker/docker-compose.infra.yml logs -f",
+    "build": "pnpm --filter \"./packages/*\" build && pnpm --filter \"./apps/*\" build",
+    "typecheck": "pnpm -r typecheck",
+    "db:migrate": "pnpm --filter @euclid/db migrate",
+    "db:migrate:down": "pnpm --filter @euclid/db migrate:down",
+    "docker:up": "docker compose -f docker/docker-compose.yml up --build -d",
+    "docker:down": "docker compose -f docker/docker-compose.yml down",
+    "docker:logs": "docker compose -f docker/docker-compose.yml logs -f"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.2"
+  },
+  "packageManager": "pnpm@12.16.1"
+}

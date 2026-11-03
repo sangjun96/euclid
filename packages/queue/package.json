@@ -1,0 +1,26 @@
+{
+  "name": "@euclid/queue",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "types": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "pg-boss": "^12.38.0"
+  },
+  "devDependencies": {
+    "@euclid/tsconfig": "workspace:*",
+    "@types/node": "^22.13.9",
+    "typescript": "^5.8.2"
+  }
+}

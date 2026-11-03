@@ -1,0 +1,1 @@
+{"root":["./src/index.ts","./src/migrator.ts","./src/types.ts","./src/migrations/001_initial_schema.ts"],"version":"5.9.3"}
