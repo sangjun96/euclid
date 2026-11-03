@@ -7,6 +7,9 @@ async function startWorker() {
   console.log("[Worker] Initializing pg-boss worker...");
   const boss = await getQueueBoss();
 
+  // Ensure queue exists in pg-boss schema before polling
+  await boss.createQueue(QUEUES.AI_GENERATE);
+
   console.log(`[Worker] Listening on queue: "${QUEUES.AI_GENERATE}"...`);
 
   await boss.work<AiGenerateJobPayload>(

@@ -1,5 +1,5 @@
 import { PgBoss, type SendOptions } from "pg-boss";
-import type { JobPayloadMap, QueueName } from "./jobs.js";
+import { QUEUES, type JobPayloadMap, type QueueName } from "./jobs.js";
 
 export * from "./jobs.js";
 
@@ -28,6 +28,15 @@ export async function getQueueBoss(customUrl?: string): Promise<PgBoss> {
   if (!sharedBoss) {
     sharedBoss = createQueueBoss(customUrl);
     await sharedBoss.start();
+
+    // In pg-boss v10+, queues must be explicitly created before work/fetch
+    for (const queueName of Object.values(QUEUES)) {
+      try {
+        await sharedBoss.createQueue(queueName);
+      } catch (err) {
+        console.warn(`[pg-boss] Notice creating queue "${queueName}":`, (err as Error).message);
+      }
+    }
   }
   return sharedBoss;
 }
